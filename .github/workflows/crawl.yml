@@ -16,6 +16,11 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Pull latest changes
+        run: git pull --rebase origin main
 
       - name: Setup Python
         uses: actions/setup-python@v5
@@ -34,9 +39,5 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add -A
           git diff --staged --quiet && echo "Keine Änderungen" && exit 0
-          git stash
-          git pull --rebase
-          git stash pop
-          git add -A
           git commit -m "data: crowd update $(date -u '+%Y-%m-%d %H:%M') UTC"
           git push
