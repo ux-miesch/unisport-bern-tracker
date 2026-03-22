@@ -44,20 +44,20 @@ def fetch_crowd_data():
 
     soup = BeautifulSoup(resp.text, "html.parser")
 
-    # Debug: alle ajax-Elemente
-    ajax_els = soup.find_all(class_=lambda c: c and "ajax" in c)
-    print(f"  Gefundene ajax-Elemente: {len(ajax_els)}")
-    for el in ajax_els:
-        print(f"    -> [{el.get('class')}] Text: '{el.get_text(strip=True)}'")
+    # Klasse hat Leerzeichen: "ajax-updatable message" -> beide Klassen müssen vorhanden sein
+    elements = soup.find_all(class_="ajax-updatable")
+    print(f"  Gefundene ajax-updatable Elemente: {len(elements)}")
+    for el in elements:
+        print(f"    -> Klassen: {el.get('class')} | Text: '{el.get_text(strip=True)}'")
 
     results = []
-    elements = soup.find_all(class_="ajax-updatable_message")
     for el in elements:
         text = el.get_text(strip=True)
         if " von " in text:
             current, maximum, percent = parse_value(text)
             if current is not None:
                 results.append({"text": text, "current": current, "maximum": maximum, "percent": percent})
+                print(f"  Gefunden: {text} -> {percent}%")
 
     return results
 
