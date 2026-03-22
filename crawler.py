@@ -7,6 +7,7 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 import os
+import re
 from datetime import datetime
 
 URL = "https://sport.unibe.ch/sportangebot/fitnessraeume/index_ger.html"
@@ -17,7 +18,8 @@ HEADERS = {
     "Accept-Encoding": "gzip, deflate, br",
     "Connection": "keep-alive",
     "Upgrade-Insecure-Requests": "1",
-    "Cache-Control": "max-age=0",
+    "Cache-Control": "no-cache",
+    "Pragma": "no-cache",
 }
 CSV_FILE = "crowd_data.csv"
 
@@ -42,22 +44,59 @@ def fetch_crowd_data():
     print(f"  HTTP Status: {resp.status_code}")
     print(f"  Response size: {len(resp.text)} bytes")
 
+    # Methode 1: BeautifulSoup mit Klasse
     soup = BeautifulSoup(resp.text, "html.parser")
-
-    # Klasse hat Leerzeichen: "ajax-updatable message" -> beide Klassen müssen vorhanden sein
     elements = soup.find_all(class_="ajax-updatable")
-    print(f"  Gefundene ajax-updatable Elemente: {len(elements)}")
-    for el in elements:
-        print(f"    -> Klassen: {el.get('class')} | Text: '{el.get_text(strip=True)}'")
+    print(f"  ajax-updatable Elemente (BS4): {len(elements)}")
 
+    # Methode 2: Direkte Regex-Suche nach "X von Y" im rohen HTML
+    matches = re.findall(r'(\d+)\s+von\s+(\d+)', resp.text)
+    print(f"  'X von Y' Muster im HTML: {matches}")
+
+    # Methode 3: Suche nach go-stop-display Klasse
+    go_stop = soup.find_all(class_=lambda c: c and "go-stop" in " ".join(c))
+    print(f"  go-stop Elemente: {len(go_stop)}")
+    for el in go_stop:
+        print(f"    -> {el.get('class')} | '{el.get_text(strip=True)}'")
+
+    # Methode 4: Alle Divs mit "von" im Text
+    alle_von = [el for el in soup.find_all(True) if " von " in el.get_text()]
+    print(f"  Elemente mit ' von ': {len(alle_von)}")
+    for el in alle_von[:5]:
+        print(f"    -> <{el.name} class='{el.get('class')}'> '{el.get_text(strip=True)[:50]}'")
+
+    # Daten extrahieren: Regex direkt auf HTML
     results = []
-    for el in elements:
-        text = el.get_text(strip=True)
-        if " von " in text:
-            current, maximum, percent = parse_value(text)
-            if current is not None:
-                results.append({"text": text, "current": current, "maximum": maximum, "percent": percent})
-                print(f"  Gefunden: {text} -> {percent}%")
+    # Suche nach dem spezifischen Pattern im HTML-Kontext
+    pattern = re.findall(r'ajax-updatable[^>]*>\s*(\d+)\s+von\s+(\d+)', resp.text)
+    print(f"  Direkte Pattern-Suche: {pattern}")
+
+    if pattern:
+        gym_names = ["ZSSw", "vonRoll"]
+        for i, (current_str, maximum_str) in enumerate(pattern):
+            current = int(current_str)
+            maximum = int(maximum_str)
+            percent = round((current / maximum) * 100, 1) if maximum > 0 else 0
+            results.append({
+                "text": f"{current} von {maximum}",
+                "current": current,
+                "maximum": maximum,
+                "percent": percent,
+            })
+            print(f"  Gefunden: {current} von {maximum} ({percent}%)")
+    elif matches:
+        # Fallback: alle "X von Y" nehmen
+        gym_names = ["ZSSw", "vonRoll"]
+        for i, (current_str, maximum_str) in enumerate(matches[:2]):
+            current = int(current_str)
+            maximum = int(maximum_str)
+            percent = round((current / maximum) * 100, 1) if maximum > 0 else 0
+            results.append({
+                "text": f"{current} von {maximum}",
+                "current": current,
+                "maximum": maximum,
+                "percent": percent,
+            })
 
     return results
 
@@ -96,7 +135,7 @@ def main():
     try:
         data = fetch_crowd_data()
         if not data:
-            print("  WARNUNG: Keine Daten gefunden (Gym geschlossen oder HTML geändert)")
+            print("  WARNUNG: Keine Daten gefunden (Gym geschlossen oder Server blockt)")
         else:
             save_to_csv(data, now)
             for i, entry in enumerate(data):
