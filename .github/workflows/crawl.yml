@@ -30,6 +30,12 @@ jobs:
       - name: Install Dependencies
         run: pip install requests beautifulsoup4
 
+      - name: Debug HTML
+        run: |
+          curl -s -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/123.0.0.0 Safari/537.36" \
+            "https://sport.unibe.ch/sportangebot/fitnessraeume/index_ger.html" \
+            | grep -i "go-stop\|ajax-updatable\|von 80\|von 40" || echo "NICHTS GEFUNDEN"
+
       - name: Run Crawler
         run: python crawler.py
 
@@ -40,4 +46,5 @@ jobs:
           git add -A
           git diff --staged --quiet && echo "Keine Änderungen" && exit 0
           git commit -m "data: crowd update $(date -u '+%Y-%m-%d %H:%M') UTC"
+          git pull --rebase origin main
           git push
