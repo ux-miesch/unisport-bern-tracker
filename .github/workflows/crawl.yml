@@ -2,10 +2,14 @@ name: UniBE Crowd Monitor Crawler
 
 on:
   schedule:
-    - cron: '0,15,30,45 5-20 * * 1-5'   # Mo-Fr: 07:00-22:00 CH (UTC+2)
-    - cron: '0,15,30,45 6-15 * * 6'     # Sa: 08:00-17:00 CH
-    - cron: '0,15,30,45 7-15 * * 0'     # So: 09:00-17:00 CH
+    - cron: '7,22,37,52 5-20 * * 1-5'
+    - cron: '7,22,37,52 6-15 * * 6'
+    - cron: '7,22,37,52 7-15 * * 0'
   workflow_dispatch:
+
+concurrency:
+  group: crowd-crawler
+  cancel-in-progress: false
 
 jobs:
   crawl:
@@ -13,32 +17,45 @@ jobs:
     permissions:
       contents: write
 
+    env:
+      TRIGGER: ${{ github.event_name }}
+      RUN_ID: ${{ github.run_id }}
+
     steps:
-      - name: Checkout Repository
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-
-      - name: Pull latest changes
-        run: git pull --rebase origin main
 
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install Dependencies
-        run: pip install requests beautifulsoup4
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests beautifulsoup4
 
-      - name: Run Crawler
+      - name: Run crawler
         run: python crawler.py
 
-      - name: Commit & Push CSV
+      - name: Commit and push CSV
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git diff --staged --quiet && echo "Keine Änderungen" && exit 0
-          git commit -m "data: crowd update $(date -u '+%Y-%m-%d %H:%M') UTC"
-          git pull --rebase origin main
-          git push
+
+          git add crowd_data.csv
+
+          if git diff --staged --quiet; then
+            echo "Keine Aenderungen in crowd_data.csv"
+            exit 0
+          fi
+
+          git commit -m "data: crowd update (${TRIGGER}) $(date -u '+%Y-%m-%d %H:%M') UTC"
+
+          for attempt in 1 2 3; do
+            git pull --rebase origin main && git push origin HEAD:main && break
+            echo "Push-Versuch ${attempt} fehlgeschlagen, neuer Versuch..."
+            sleep 5
+          done
