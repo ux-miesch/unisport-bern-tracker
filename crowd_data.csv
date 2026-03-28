@@ -1,0 +1,2 @@
+timestamp_utc,weekday_utc,hour_utc,minute_utc,trigger,run_id,gym,current,maximum,percent,status,message
+2026-03-28T15:33:06.403813Z,Saturday,15,33,workflow_dispatch,23688390075,ZSSw,42,80,52.5,ok,42 von 80
