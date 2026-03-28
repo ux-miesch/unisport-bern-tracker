@@ -2,16 +2,9 @@ name: UniBE Crowd Monitor Crawler
 
 on:
   schedule:
-    # Mo-Fr: 07:00-22:00 Uhr CH (= 05:00-20:00 UTC+2)
-    # Erste Messung 05:00 UTC = 07:00 CH, letzte 20:00 UTC = 22:00 CH
-    - cron: '0,10,20,30,40,50 5-20 * * 1-5'
-
-    # Sa: 08:00-17:00 Uhr CH (= 06:00-15:00 UTC+2)
-    - cron: '0,10,20,30,40,50 6-15 * * 6'
-
-    # So: 09:00-17:00 Uhr CH (= 07:00-15:00 UTC+2)
-    - cron: '0,10,20,30,40,50 7-15 * * 0'
-
+    - cron: '0,15,30,45 5-20 * * 1-5'   # Mo-Fr: 07:00-22:00 CH (UTC+2)
+    - cron: '0,15,30,45 6-15 * * 6'     # Sa: 08:00-17:00 CH
+    - cron: '0,15,30,45 7-15 * * 0'     # So: 09:00-17:00 CH
   workflow_dispatch:
 
 jobs:
