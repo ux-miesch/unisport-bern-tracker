@@ -126,3 +126,4 @@ timestamp_utc,weekday_utc,hour_utc,minute_utc,trigger,run_id,gym,current,maximum
 2026-04-21T15:44:55.419571Z,Tuesday,15,44,schedule,24731940864,ZSSw,60,80,75.0,ok,60 von 80
 2026-04-21T16:42:37.687414Z,Tuesday,16,42,schedule,24734704858,ZSSw,73,80,91.2,ok,73 von 80
 2026-04-21T17:44:28.061856Z,Tuesday,17,44,schedule,24737469022,ZSSw,65,80,81.2,ok,65 von 80
+2026-04-21T18:46:46.801994Z,Tuesday,18,46,schedule,24740290959,SYSTEM,,,,no_data,No parsable occupancy found
