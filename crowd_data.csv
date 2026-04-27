@@ -185,3 +185,4 @@ timestamp_utc,weekday_utc,hour_utc,minute_utc,trigger,run_id,gym,current,maximum
 2026-04-27T09:59:56.657051Z,Monday,9,59,schedule,24988600018,ZSSw,36,80,45.0,ok,36 von 80
 2026-04-27T11:53:09.682080Z,Monday,11,53,schedule,24993422821,ZSSw,26,80,32.5,ok,26 von 80
 2026-04-27T14:20:55.066020Z,Monday,14,20,schedule,25000545291,ZSSw,47,80,58.8,ok,47 von 80
+2026-04-27T16:00:39.696947Z,Monday,16,0,schedule,25005704785,ZSSw,76,80,95.0,ok,76 von 80
